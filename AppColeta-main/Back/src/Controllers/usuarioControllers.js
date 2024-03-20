@@ -1,4 +1,5 @@
 import usuarioService from "../Service/usuarioService.js";
+import { send } from "../utils/mail.js";
 
 export default class usuarioControllers {
   // Função de Cadastro
@@ -71,6 +72,54 @@ export default class usuarioControllers {
       res.status(500).send({
         message: "Erro na API",
       });
+    }
+  }
+  static async confirmEmail(req, res) {
+    const email = req.params.email;
+    const verificandoEmail = await usuarioService.confirmarEmail(email);
+    if (!verificandoEmail) {
+      res.status(404).send({
+        message: "Usuario não encontrado",
+      });
+      return;
+    } else {
+      console.log(verificandoEmail);
+      let token = "";
+      for (let i = 0; i < 4; i++) {
+        token += Math.floor(Math.random() * 10);
+      }
+
+      await usuarioService.tokenCadastrando(token, verificandoEmail.id);
+
+      await send(
+        email,
+        "teste blabla",
+        `<p>
+      <i>teste deu certo</i>
+      <a>${token}</a>
+      <p>${email}</p>
+      </p>`
+      );
+      res.status(200).json(verificandoEmail);
+    }
+  }
+  catch(error) {
+    console.log(error);
+    res.status().send({
+      message: "erro na api",
+    });
+  }
+
+  static async tokenConfirm(req, res) {
+    const { token, id } = req.body;
+    const tokenConfirmando = await usuarioService.verificandoToken(token, id);
+    if (!tokenConfirmando) {
+      res.status(404).send({
+        message: "TOKEN INVALIDO",
+      });
+      return;
+    } else {
+      res.status(200).send(tokenConfirmando);
     }
   }
 }

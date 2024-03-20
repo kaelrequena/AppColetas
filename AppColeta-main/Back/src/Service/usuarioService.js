@@ -1,5 +1,5 @@
 import db from "../db.js";
-
+import moment from "moment";
 // const moment = require("moment");
 
 export default class usuarioService {
@@ -45,6 +45,79 @@ export default class usuarioService {
     }
   }
 
+  static async tokenCadastrando(token, id) {
+    return new Promise((resolve, reject) => {
+      try {
+        const dataAtual = moment().format("YYYY-MM-DD HH:mm:ss");
+        db.query(
+          "INSERT INTO token_Usuario (token, id_Usuario, data_criacao) VALUES (?,?,?)",
+          [token, id, dataAtual],
+          (error, results) => {
+            if (error) {
+              reject(error);
+              return;
+            }
+            resolve(true);
+          }
+        );
+      } catch (error) {}
+    });
+  }
+
+  static async bancoVerificar(email) {
+    return new Promise((resolve, reject) => {
+      db.query(
+        `SELECT Usuarios.email, Usuarios.id FROM ccdblog_app_coletas.Usuarios WHERE email=?`,
+        [email],
+        (error, results) => {
+          if (error) {
+            reject(error);
+            return;
+          }
+          if (results.length > 0) {
+            resolve(results[0]);
+          } else {
+            resolve(false);
+          }
+        }
+      );
+    });
+  }
+
+  static async verificandoToken(token, id) {
+    return new Promise((resolve, reject) => {
+      try {
+        db.query(
+          "SELECT * FROM token_Usuario WHERE id_Usuario =? AND token = ? ORDER BY data_criacao DESC",
+          [id, token],
+          (error, results) => {
+            if (error) {
+              reject(error);
+              return;
+            }
+            if (results.length <= 0) {
+              resolve(false);
+              return;
+            }
+
+            const verificaTempo = moment().diff(
+              results[0].data_criacao,
+              "minute"
+            );
+            if (verificaTempo <= 10) {
+              resolve(true);
+              return;
+            } else {
+              resolve(false);
+            }
+          }
+        );
+      } catch (error) {
+        reject(error); // Rejeitar se houver um erro no bloco try
+      }
+    });
+  }
+
   static async buscar(placaVeiculo, email) {
     return new Promise((resolve, reject) => {
       db.query(
@@ -85,6 +158,18 @@ export default class usuarioService {
         });
         return;
       }
+    });
+  }
+
+  static async confirmarEmail(email) {
+    return new Promise(async (resolve, reject) => {
+      let confirmEmail = await this.bancoVerificar(email);
+      if (confirmEmail) {
+        resolve(confirmEmail);
+      } else {
+        resolve(false);
+      }
+      return;
     });
   }
 

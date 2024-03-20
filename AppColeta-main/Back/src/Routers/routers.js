@@ -12,11 +12,16 @@ router.get("/manifestos/:placa", manifestoControllers.buscarManifestoPorUser);
 // Rota com o metodo GET, pois estamos pegando os manifestos do banco
 router.get("/coletas/:numManifesto", coletaController.buscarColetas);
 
+// Rota para confirmar email da tela esqueceu senha
+router.get("/confirm/:email", usuarioControllers.confirmEmail);
+
 //Rota com o metodo POST, pois estamos inserindo os dados no banco
 router.post("/cadastro", usuarioControllers.cadastrar);
 
 //Rota para comparar um EMAIL
 router.post("/cadastro/emailConfirm", usuarioControllers.dadosConfirm);
+
+router.post("/validandoToken", usuarioControllers.tokenConfirm);
 
 //Rotas para atualizar dados, pois estamos utilizando o metodo PUT
 router.put("/cadastro/atualizar");
